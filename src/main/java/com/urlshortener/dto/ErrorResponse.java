@@ -1,61 +1,58 @@
 package com.urlshortener.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * Standardised error response body returned for all API errors.
- * Provides a consistent shape so clients can reliably parse failures.
- *
- * Example JSON:
- * {
- *   "status": 404,
- *   "error": "Not Found",
- *   "message": "Short code 'abc123' not found",
- *   "path": "/abc123",
- *   "timestamp": "2024-01-15T10:30:00"
- * }
- */
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ErrorResponse {
 
-    /** HTTP status code (e.g., 400, 404, 500). */
     private int status;
-
-    /** Short HTTP status description (e.g., "Bad Request"). */
     private String error;
-
-    /** Human-readable error message. */
     private String message;
-
-    /** The request path that triggered the error. */
     private String path;
-
-    /** ISO-8601 timestamp of when the error occurred. */
-    @Builder.Default
     private LocalDateTime timestamp = LocalDateTime.now();
-
-    /**
-     * List of field-level validation errors.
-     * Only populated for 400 validation failures.
-     */
     private List<FieldError> fieldErrors;
 
-    /** Inner class for per-field validation errors. */
-    @Data
-    @AllArgsConstructor
+    // ── Getters ──────────────────────────────────────────
+    public int getStatus() { return status; }
+    public String getError() { return error; }
+    public String getMessage() { return message; }
+    public String getPath() { return path; }
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public List<FieldError> getFieldErrors() { return fieldErrors; }
+
+    // ── Setters ──────────────────────────────────────────
+    public void setStatus(int status) { this.status = status; }
+    public void setError(String error) { this.error = error; }
+    public void setMessage(String message) { this.message = message; }
+    public void setPath(String path) { this.path = path; }
+    public void setFieldErrors(List<FieldError> fieldErrors) { this.fieldErrors = fieldErrors; }
+
+    // ── Builder ──────────────────────────────────────────
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private final ErrorResponse r = new ErrorResponse();
+        public Builder status(int v) { r.status = v; return this; }
+        public Builder error(String v) { r.error = v; return this; }
+        public Builder message(String v) { r.message = v; return this; }
+        public Builder path(String v) { r.path = v; return this; }
+        public Builder fieldErrors(List<FieldError> v) { r.fieldErrors = v; return this; }
+        public ErrorResponse build() { return r; }
+    }
+
+    // ── Inner Class ──────────────────────────────────────
     public static class FieldError {
         private String field;
         private String message;
+
+        public FieldError() {}
+        public FieldError(String field, String message) {
+            this.field = field;
+            this.message = message;
+        }
+        public String getField() { return field; }
+        public String getMessage() { return message; }
     }
 }

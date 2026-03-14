@@ -1,64 +1,80 @@
 package com.urlshortener.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.time.LocalDateTime;
 
-/**
- * JPA Entity representing a URL mapping stored in the database.
- * Maps to the "url_mappings" table.
- */
 @Entity
-@Table(
-    name = "url_mappings",
-    indexes = {
-        @Index(name = "idx_short_code", columnList = "shortCode", unique = true),
-        @Index(name = "idx_original_url", columnList = "originalUrl")
-    }
-)
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
+@Table(name = "url_mappings")
 public class UrlMapping {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** The original long URL provided by the user. */
     @Column(nullable = false, length = 2048)
     private String originalUrl;
 
-    /** The unique short code (e.g., "aB3xZ9"). */
     @Column(nullable = false, unique = true, length = 20)
     private String shortCode;
 
-    /** How many times this short URL has been accessed. */
     @Column(nullable = false)
-    @Builder.Default
     private Long clickCount = 0L;
 
-    /** Timestamp of when this mapping was created. */
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    /** Optional expiry time — null means never expires. */
     @Column
     private LocalDateTime expiresAt;
 
-    /** Whether this mapping is currently active. */
     @Column(nullable = false)
-    @Builder.Default
     private boolean active = true;
 
-    /** Automatically set createdAt before first persist. */
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+    }
+
+    // ── Getters ──────────────────────────────────────────
+    public Long getId() { return id; }
+    public String getOriginalUrl() { return originalUrl; }
+    public String getShortCode() { return shortCode; }
+    public Long getClickCount() { return clickCount; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public LocalDateTime getExpiresAt() { return expiresAt; }
+    public boolean isActive() { return active; }
+
+    // ── Setters ──────────────────────────────────────────
+    public void setId(Long id) { this.id = id; }
+    public void setOriginalUrl(String originalUrl) { this.originalUrl = originalUrl; }
+    public void setShortCode(String shortCode) { this.shortCode = shortCode; }
+    public void setClickCount(Long clickCount) { this.clickCount = clickCount; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+    public void setActive(boolean active) { this.active = active; }
+
+    // ── Builder ──────────────────────────────────────────
+    public static Builder builder() { return new Builder(); }
+
+    public static class Builder {
+        private String originalUrl;
+        private String shortCode;
+        private LocalDateTime expiresAt;
+
+        public Builder originalUrl(String originalUrl) {
+            this.originalUrl = originalUrl; return this;
+        }
+        public Builder shortCode(String shortCode) {
+            this.shortCode = shortCode; return this;
+        }
+        public Builder expiresAt(LocalDateTime expiresAt) {
+            this.expiresAt = expiresAt; return this;
+        }
+        public UrlMapping build() {
+            UrlMapping m = new UrlMapping();
+            m.originalUrl = this.originalUrl;
+            m.shortCode = this.shortCode;
+            m.expiresAt = this.expiresAt;
+            return m;
+        }
     }
 }

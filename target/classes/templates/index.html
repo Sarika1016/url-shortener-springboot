@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            outline: none;
+            transition: border 0.3s;
+        }
+
+        input[type="text"]:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .result-box {
+            background: #f8f9ff;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .result-label {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .result-url {
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: bold;
+            word-break: break-all;
+            margin-bottom: 15px;
+        }
+
+        .copy-btn {
+            padding: 8px 20px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+        }
+
+        .qr-section {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .qr-section p {
+            color: #888;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+        }
+
+        .qr-section img {
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            padding: 10px;
+        }
+
+        .error-box {
+            background: #fff0f0;
+            border: 2px solid #ff4444;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            color: #ff4444;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Title -->
+    <h1>🔗 URL Shortener</h1>
+    <p class="subtitle">Paste your long URL and get a short one instantly!</p>
+
+    <!-- Input Form -->
+    <form th:action="@{/shorten}" method="post">
+        <div class="input-group">
+            <input
+                type="text"
+                name="url"
+                placeholder="Paste your long URL here... (https://)"
+                th:value="${originalUrl}"
+                required />
+            <button type="submit">Shorten!</button>
+        </div>
+    </form>
+
+    <!-- Error Message -->
+    <div class="error-box" th:if="${error}">
+        ⚠️ <span th:text="${error}"></span>
+    </div>
+
+    <!-- Result Box -->
+    <div class="result-box" th:if="${shortUrl}">
+
+        <!-- Original URL -->
+        <div class="result-label">Original URL</div>
+        <div class="result-url" th:text="${originalUrl}"></div>
+
+        <!-- Short URL -->
+        <div class="result-label">Short URL</div>
+        <div class="result-url">
+            <a th:href="${shortUrl}" th:text="${shortUrl}" target="_blank"></a>
+        </div>
+
+        <!-- Copy Button -->
+        <button class="copy-btn"
+                onclick="copyToClipboard()">
+            📋 Copy Short URL
+        </button>
+
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-value" th:text="${clickCount}">0</div>
+                <div class="stat-label">Total Clicks</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" th:text="${shortCode}">-</div>
+                <div class="stat-label">Short Code</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" th:text="${createdAt}">-</div>
+                <div class="stat-label">Created At</div>
+            </div>
+        </div>
+
+        <!-- QR Code -->
+        <div class="qr-section">
+            <p>📱 Scan this QR Code with your phone!</p>
+            <img th:src="@{/api/urls/{code}/qr(code=${shortCode})}"
+                 alt="QR Code"
+                 width="200"
+                 height="200"/>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+    function copyToClipboard() {
+        const shortUrl = "[[${shortUrl}]]";
+        navigator.clipboard.writeText(shortUrl);
+        alert("Short URL copied to clipboard!");
+    }
+</script>
+
+</body>
+</html>
